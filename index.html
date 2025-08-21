@@ -38,6 +38,15 @@
         .download-button:hover {
             transform: scale(1.05);
         }
+        .edit-btn, .delete-btn {
+            transition: transform 0.2s ease-in-out;
+        }
+        .edit-btn:hover {
+            transform: scale(1.1);
+        }
+        .delete-btn:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
@@ -51,7 +60,7 @@
     <main class="w-full max-w-4xl p-4 sm:p-6 md:p-8 flex-grow">
 
         <!-- Navigasi -->
-        <nav class="flex justify-around bg-white p-2 rounded-xl shadow-md mb-6">
+        <nav class="flex justify-around bg-white p-2 rounded-xl shadow-md mb-6 overflow-x-auto whitespace-nowrap">
             <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700 active" data-target="jurnal-section">Jurnal Mengajar</button>
             <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700" data-target="rekap-jurnal-section">Rekap Jurnal</button>
             <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700" data-target="rekap-presensi-section">Rekap Presensi</button>
@@ -253,9 +262,9 @@
                     <ul id="list-mapel" class="mt-4 list-disc list-inside space-y-1"></ul>
                 </div>
 
-                <!-- Form Menambah Jadwal (BARU: Pilihan Jam) -->
+                <!-- Form Menambah/Mengubah Jadwal -->
                 <div>
-                    <h3 class="font-semibold text-lg mb-2">Menambah Jadwal</h3>
+                    <h3 class="font-semibold text-lg mb-2" id="jadwal-form-title">Menambah Jadwal</h3>
                     <form id="form-add-jadwal" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         <select id="jadwal-hari" class="p-2 border rounded-md" required>
                             <option value="">Pilih Hari</option>
@@ -279,9 +288,15 @@
                         </div>
 
                         <select id="jadwal-guru" class="p-2 border rounded-md" required></select>
-                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 col-span-1 sm:col-span-2 lg:col-span-3">Tambah Jadwal</button>
+                        <button type="submit" id="submit-jadwal-btn" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 col-span-1 sm:col-span-2 lg:col-span-3">Tambah Jadwal</button>
+                        <button type="button" id="cancel-edit-btn" class="bg-gray-400 text-white p-2 rounded-md hover:bg-gray-500 col-span-1 sm:col-span-2 lg:col-span-3 hidden">Batal Edit</button>
                     </form>
-                    <ul id="list-jadwal" class="mt-4 list-disc list-inside space-y-1"></ul>
+                    
+                    <!-- Daftar Jadwal -->
+                    <h3 class="font-semibold text-lg mt-6 mb-2">Daftar Jadwal</h3>
+                    <div id="list-jadwal-container" class="space-y-2">
+                        <!-- Jadwal akan di-load di sini oleh JS -->
+                    </div>
                 </div>
             </div>
         </section>
@@ -293,6 +308,17 @@
         <div class="bg-white p-6 rounded-lg shadow-xl text-center">
             <p id="modal-message" class="text-lg font-semibold mb-4"></p>
             <button id="modal-close-btn" class="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400">OK</button>
+        </div>
+    </div>
+    
+    <!-- Modal konfirmasi hapus -->
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm mx-auto">
+            <p id="confirm-message" class="text-lg font-semibold mb-4">Apakah Anda yakin ingin menghapus item ini?</p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-yes-btn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Ya</button>
+                <button id="confirm-no-btn" class="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400">Tidak</button>
+            </div>
         </div>
     </div>
 
@@ -317,6 +343,10 @@
             localStorage.setItem(key, JSON.stringify(data));
         };
 
+        // State untuk mode edit jadwal
+        let editingJadwalId = null;
+
+        // --- Modal & Message Logic ---
         const showMessage = (message) => {
             document.getElementById('modal-message').innerHTML = message;
             document.getElementById('message-modal').classList.remove('hidden');
@@ -326,6 +356,26 @@
         const closeModal = () => {
             document.getElementById('message-modal').classList.remove('flex');
             document.getElementById('message-modal').classList.add('hidden');
+        };
+        
+        const showConfirm = (message, onConfirm) => {
+            document.getElementById('confirm-message').textContent = message;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            document.getElementById('confirm-modal').classList.add('flex');
+            
+            // Hapus event listener lama
+            document.getElementById('confirm-yes-btn').replaceWith(document.getElementById('confirm-yes-btn').cloneNode(true));
+            document.getElementById('confirm-no-btn').replaceWith(document.getElementById('confirm-no-btn').cloneNode(true));
+            
+            document.getElementById('confirm-yes-btn').addEventListener('click', () => {
+                onConfirm();
+                document.getElementById('confirm-modal').classList.remove('flex');
+                document.getElementById('confirm-modal').classList.add('hidden');
+            });
+            document.getElementById('confirm-no-btn').addEventListener('click', () => {
+                document.getElementById('confirm-modal').classList.remove('flex');
+                document.getElementById('confirm-modal').classList.add('hidden');
+            });
         };
 
         document.getElementById('modal-close-btn').addEventListener('click', closeModal);
@@ -390,8 +440,20 @@
             
             // Render Jadwal
             const jadwalList = loadData(DB_KEYS.JADWAL);
-            const listJadwalEl = document.getElementById('list-jadwal');
-            listJadwalEl.innerHTML = jadwalList.map(j => `<li class="text-gray-800">${j.hari}, ${j.waktu} | ${j.kelas} | ${j.mapel} | Guru: ${j.guru}</li>`).join('');
+            const listJadwalEl = document.getElementById('list-jadwal-container');
+            listJadwalEl.innerHTML = jadwalList.map(j => `
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md shadow-sm">
+                    <p class="text-gray-800 text-sm sm:text-base">${j.hari}, ${j.waktu} | ${j.kelas} | ${j.mapel}</p>
+                    <div class="flex gap-2">
+                        <button onclick="editJadwal(${j.id})" class="edit-btn text-blue-500 hover:text-blue-700">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteJadwal(${j.id})" class="delete-btn text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         };
         
         // Populate dropdowns for Admin forms
@@ -580,22 +642,78 @@
             }
 
             const waktu = `Jam ke-${startHour} - Jam ke-${endHour}`;
-            
-            const jadwal = {
-                id: Date.now(),
+            const jadwalList = loadData(DB_KEYS.JADWAL);
+
+            const newJadwal = {
+                id: editingJadwalId || Date.now(),
                 hari: document.getElementById('jadwal-hari').value,
                 kelas: document.getElementById('jadwal-kelas').value,
                 mapel: document.getElementById('jadwal-mapel').value,
                 waktu: waktu,
                 guru: document.getElementById('jadwal-guru').value,
             };
-            const jadwalList = loadData(DB_KEYS.JADWAL);
-            jadwalList.push(jadwal);
+
+            if (editingJadwalId) {
+                // Update jadwal yang ada
+                const index = jadwalList.findIndex(j => j.id === editingJadwalId);
+                if (index !== -1) {
+                    jadwalList[index] = newJadwal;
+                    showMessage('Jadwal berhasil diperbarui!');
+                }
+                editingJadwalId = null; // Reset mode edit
+            } else {
+                // Tambah jadwal baru
+                jadwalList.push(newJadwal);
+                showMessage('Jadwal berhasil ditambahkan!');
+            }
+            
             saveData(DB_KEYS.JADWAL, jadwalList);
             e.target.reset();
             renderAdminLists();
-            showMessage('Jadwal berhasil ditambahkan!');
+            resetJadwalForm();
         });
+
+        const resetJadwalForm = () => {
+            editingJadwalId = null;
+            document.getElementById('form-add-jadwal').reset();
+            document.getElementById('submit-jadwal-btn').textContent = 'Tambah Jadwal';
+            document.getElementById('jadwal-form-title').textContent = 'Menambah Jadwal';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+        };
+
+        // Fungsi edit jadwal
+        window.editJadwal = (id) => {
+            editingJadwalId = id;
+            const jadwal = loadData(DB_KEYS.JADWAL).find(j => j.id === id);
+            if (jadwal) {
+                document.getElementById('jadwal-hari').value = jadwal.hari;
+                document.getElementById('jadwal-kelas').value = jadwal.kelas;
+                document.getElementById('jadwal-mapel').value = jadwal.mapel;
+                document.getElementById('jadwal-guru').value = jadwal.guru;
+                
+                const [startText, , endText] = jadwal.waktu.split(' ');
+                document.getElementById('jadwal-waktu-start').value = startText.split('-')[1];
+                document.getElementById('jadwal-waktu-end').value = endText.split('-')[1];
+                
+                document.getElementById('submit-jadwal-btn').textContent = 'Perbarui Jadwal';
+                document.getElementById('jadwal-form-title').textContent = 'Mengubah Jadwal';
+                document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            }
+        };
+
+        // Fungsi hapus jadwal
+        window.deleteJadwal = (id) => {
+            showConfirm('Apakah Anda yakin ingin menghapus jadwal ini?', () => {
+                let jadwalList = loadData(DB_KEYS.JADWAL);
+                jadwalList = jadwalList.filter(j => j.id !== id);
+                saveData(DB_KEYS.JADWAL, jadwalList);
+                renderAdminLists();
+                showMessage('Jadwal berhasil dihapus!');
+                resetJadwalForm();
+            });
+        };
+        
+        document.getElementById('cancel-edit-btn').addEventListener('click', resetJadwalForm);
 
         // --- Jurnal Mengajar Section Logic ---
         const renderJurnalForm = () => {
