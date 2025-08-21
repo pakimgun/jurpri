@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurnal Mengajar</title>
+    <!-- Tailwind CSS CDN untuk styling mobile-first -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .container {
+            max-width: 100%;
+            padding: 1rem;
+        }
+        .card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-item.active {
+            color: #4c51bf;
+            border-bottom: 2px solid #4c51bf;
+        }
+        .alpha-count-3 {
+            color: #ef4444; /* Warna merah untuk notifikasi Alpha > 3 */
+            font-weight: bold;
+        }
+        /* Style untuk tombol download */
+        .download-button {
+            transition: transform 0.2s ease-in-out;
+        }
+        .download-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+
+    <!-- Header -->
+    <header class="w-full bg-white shadow-md p-4 sticky top-0 z-50">
+        <h1 class="text-2xl font-bold text-center text-gray-800">Jurnal Mengajar</h1>
+    </header>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-4xl p-4 sm:p-6 md:p-8 flex-grow">
+
+        <!-- Navigasi -->
+        <nav class="flex justify-around bg-white p-2 rounded-xl shadow-md mb-6">
+            <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700 active" data-target="jurnal-section">Jurnal Mengajar</button>
+            <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700" data-target="rekap-jurnal-section">Rekap Jurnal</button>
+            <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700" data-target="rekap-presensi-section">Rekap Presensi</button>
+            <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700" data-target="tugas-section">Tugas</button>
+            <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700" data-target="download-section">Download</button>
+            <button class="nav-item p-2 sm:p-4 text-sm sm:text-base font-semibold text-gray-600 transition duration-300 ease-in-out hover:text-indigo-700" data-target="admin-section">Admin</button>
+        </nav>
+
+        <!-- Bagian Jurnal Mengajar (DEFAULT) -->
+        <section id="jurnal-section" class="section active">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 text-center">Jurnal Mengajar</h2>
+                
+                <!-- Info Jadwal Saat Ini -->
+                <div class="mb-4 text-center p-4 bg-indigo-50 rounded-lg">
+                    <p class="text-sm text-gray-600">Jadwal saat ini:</p>
+                    <p class="text-lg font-semibold text-indigo-700" id="current-schedule-info">Pilih jadwal untuk melihat info.</p>
+                </div>
+
+                <form id="form-jurnal-mengajar">
+                    <div class="mb-4">
+                        <label for="jurnal-jadwal" class="block text-gray-700 mb-1">Pilih Jadwal</label>
+                        <select id="jurnal-jadwal" class="w-full p-2 border rounded-md" required></select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="jurnal-tanggal" class="block text-gray-700 mb-1">Tanggal</label>
+                        <input type="date" id="jurnal-tanggal" class="w-full p-2 border rounded-md" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="jurnal-kegiatan" class="block text-gray-700 mb-1">Kegiatan Pembelajaran</label>
+                        <textarea id="jurnal-kegiatan" rows="4" class="w-full p-2 border rounded-md" placeholder="Jelaskan kegiatan hari ini..." required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold mb-2">Presensi Siswa</h3>
+                        <div id="presensi-siswa-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <!-- Siswa akan di-load di sini oleh JS -->
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="jurnal-catatan" class="block text-gray-700 mb-1">Catatan Kegiatan (Opsional)</label>
+                        <textarea id="jurnal-catatan" rows="2" class="w-full p-2 border rounded-md" placeholder="Catatan tambahan..."></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="jurnal-foto" class="block text-gray-700 mb-1">Dokumentasi Kelas (Foto)</label>
+                        <input type="file" id="jurnal-foto" accept="image/*" class="w-full p-2 border rounded-md">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-md font-bold hover:bg-green-700">Simpan Jurnal</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Bagian Rekap Jurnal Mengajar -->
+        <section id="rekap-jurnal-section" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 text-center">Rekap Jurnal Mengajar</h2>
+                <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                    <select id="filter-jurnal-kelas" class="flex-grow p-2 border rounded-md">
+                        <option value="">Filter by Kelas</option>
+                    </select>
+                    <input type="date" id="filter-jurnal-tanggal" class="p-2 border rounded-md">
+                </div>
+                <div id="rekap-jurnal-list" class="space-y-4">
+                    <!-- Rekap jurnal akan di-load di sini oleh JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Bagian Rekap Presensi -->
+        <section id="rekap-presensi-section" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 text-center">Rekap Presensi</h2>
+                <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                    <input type="text" id="filter-presensi-nama" placeholder="Filter by Nama" class="flex-grow p-2 border rounded-md">
+                    <select id="filter-presensi-kelas" class="p-2 border rounded-md">
+                        <option value="">Filter by Kelas</option>
+                    </select>
+                    <input type="date" id="filter-presensi-tanggal" class="p-2 border rounded-md">
+                </div>
+                <div id="rekap-presensi-list" class="overflow-x-auto">
+                    <table class="min-w-full bg-white border">
+                        <thead>
+                            <tr class="bg-gray-200">
+                                <th class="py-2 px-4 border-b">NIS Siswa</th>
+                                <th class="py-2 px-4 border-b">Nama Siswa</th>
+                                <th class="py-2 px-4 border-b">Kelas</th>
+                                <th class="py-2 px-4 border-b">Alpha Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="presensi-table-body">
+                            <!-- Rekap presensi akan di-load di sini oleh JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bagian Tugas -->
+        <section id="tugas-section" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 text-center">Tugas & Penilaian</h2>
+                <form id="form-tugas">
+                    <div class="mb-4">
+                        <label for="tugas-judul" class="block text-gray-700 mb-1">Judul Tugas</label>
+                        <input type="text" id="tugas-judul" class="w-full p-2 border rounded-md" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="tugas-kelas" class="block text-gray-700 mb-1">Kelas</label>
+                        <select id="tugas-kelas" class="w-full p-2 border rounded-md" required></select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="tugas-deskripsi" class="block text-gray-700 mb-1">Deskripsi</label>
+                        <textarea id="tugas-deskripsi" rows="3" class="w-full p-2 border rounded-md" required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="tugas-nilai" class="block text-gray-700 mb-1">Nilai (Opsional)</label>
+                        <div id="tugas-nilai-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                             <!-- Siswa akan di-load di sini oleh JS -->
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 text-white p-3 rounded-md font-bold hover:bg-purple-700">Simpan Tugas</button>
+                </form>
+                <h3 class="text-lg font-bold mt-6 mb-2">Daftar Tugas</h3>
+                <div id="list-tugas" class="space-y-4">
+                    <!-- Tugas akan di-load di sini oleh JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Bagian Download -->
+        <section id="download-section" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 text-center">Download Basis Data</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <button id="download-jurnal-btn" class="download-button bg-blue-600 text-white p-4 rounded-md font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition duration-200">
+                        <i class="fas fa-file-export"></i> Jurnal Mengajar
+                    </button>
+                    <button id="download-presensi-btn" class="download-button bg-green-600 text-white p-4 rounded-md font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition duration-200">
+                        <i class="fas fa-file-export"></i> Rekap Presensi
+                    </button>
+                    <button id="download-nilai-btn" class="download-button bg-purple-600 text-white p-4 rounded-md font-bold flex items-center justify-center gap-2 hover:bg-purple-700 transition duration-200">
+                        <i class="fas fa-file-export"></i> Rekap Nilai
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bagian Administrator -->
+        <section id="admin-section" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4 text-center">Admin</h2>
+                
+                <!-- Form Menambah Guru -->
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-semibold text-lg mb-2">Menambah Guru</h3>
+                    <form id="form-add-guru" class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="guru-nama" placeholder="Nama Guru" class="flex-grow p-2 border rounded-md" required>
+                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Tambah</button>
+                    </form>
+                    <ul id="list-guru" class="mt-4 list-disc list-inside space-y-1"></ul>
+                </div>
+                
+                <!-- Form Menambah Kelas & Siswa -->
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-semibold text-lg mb-2">Menambah Kelas & Siswa</h3>
+                    <p class="text-sm text-gray-500 mb-2">Impor daftar siswa dan kelas dari file .txt (format: `NIS, Nama Siswa, Nama Kelas`).</p>
+                    <form id="form-add-kelas-siswa">
+                        <div class="mb-4">
+                            <label for="siswa-import-kelas" class="block text-gray-700 mb-1">Impor Daftar Siswa & Kelas (.txt)</label>
+                            <input type="file" id="siswa-import-kelas" class="w-full p-2 border rounded-md" accept=".txt">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-md font-bold hover:bg-blue-700">Impor</button>
+                    </form>
+
+                    <p class="text-sm text-center text-gray-500 my-4">-- ATAU --</p>
+
+                    <form id="form-add-kelas-manual" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="kelas-nama-manual" class="block text-gray-700 mb-1">Nama Kelas</label>
+                            <input type="text" id="kelas-nama-manual" placeholder="Contoh: 7A" class="w-full p-2 border rounded-md" required>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="siswa-manual" class="block text-gray-700 mb-1">Tambahkan Siswa (Manual)</label>
+                            <textarea id="siswa-manual" rows="4" placeholder="Ketik nama siswa, satu nama per baris" class="w-full p-2 border rounded-md" required></textarea>
+                        </div>
+                        <button type="submit" class="bg-blue-600 text-white p-3 rounded-md font-bold hover:bg-blue-700 col-span-1 sm:col-span-2">Tambah Kelas & Siswa</button>
+                    </form>
+                    
+                    <ul id="list-kelas" class="mt-4 list-disc list-inside space-y-1"></ul>
+                    <ul id="list-siswa" class="mt-4 list-disc list-inside space-y-1"></ul>
+                </div>
+
+                <!-- Form Menambah Mapel -->
+                <div class="mb-6 border-b pb-4">
+                    <h3 class="font-semibold text-lg mb-2">Menambah Mata Pelajaran</h3>
+                    <form id="form-add-mapel" class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="mapel-nama" placeholder="Nama Mapel" class="flex-grow p-2 border rounded-md" required>
+                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Tambah</button>
+                    </form>
+                    <ul id="list-mapel" class="mt-4 list-disc list-inside space-y-1"></ul>
+                </div>
+
+                <!-- Form Menambah Jadwal (BARU: Pilihan Jam) -->
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">Menambah Jadwal</h3>
+                    <form id="form-add-jadwal" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        <select id="jadwal-hari" class="p-2 border rounded-md" required>
+                            <option value="">Pilih Hari</option>
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
+                        </select>
+                        <select id="jadwal-kelas" class="p-2 border rounded-md" required></select>
+                        <select id="jadwal-mapel" class="p-2 border rounded-md" required></select>
+                        
+                        <!-- Dropdown untuk rentang jam pelajaran -->
+                        <div class="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-2 gap-2">
+                            <select id="jadwal-waktu-start" class="p-2 border rounded-md" required>
+                                <option value="">Jam Mulai</option>
+                            </select>
+                            <select id="jadwal-waktu-end" class="p-2 border rounded-md" required>
+                                <option value="">Jam Selesai</option>
+                            </select>
+                        </div>
+
+                        <select id="jadwal-guru" class="p-2 border rounded-md" required></select>
+                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 col-span-1 sm:col-span-2 lg:col-span-3">Tambah Jadwal</button>
+                    </form>
+                    <ul id="list-jadwal" class="mt-4 list-disc list-inside space-y-1"></ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- Modal untuk pesan -->
+    <div id="message-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+            <p id="modal-message" class="text-lg font-semibold mb-4"></p>
+            <button id="modal-close-btn" class="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Simulasi Database (menggunakan localStorage) ---
+        const DB_KEYS = {
+            GURU: 'jurnal_guru',
+            KELAS: 'jurnal_kelas',
+            SISWA: 'jurnal_siswa',
+            MAPEL: 'jurnal_mapel',
+            JADWAL: 'jurnal_jadwal',
+            JURNAL: 'jurnal_mengajar',
+            TUGAS: 'jurnal_tugas',
+        };
+
+        const loadData = (key) => {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
+        };
+
+        const saveData = (key, data) => {
+            localStorage.setItem(key, JSON.stringify(data));
+        };
+
+        const showMessage = (message) => {
+            document.getElementById('modal-message').innerHTML = message;
+            document.getElementById('message-modal').classList.remove('hidden');
+            document.getElementById('message-modal').classList.add('flex');
+        };
+
+        const closeModal = () => {
+            document.getElementById('message-modal').classList.remove('flex');
+            document.getElementById('message-modal').classList.add('hidden');
+        };
+
+        document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+
+        // --- Navigasi Halaman (SPA) ---
+        const sections = document.querySelectorAll('.section');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetId = item.getAttribute('data-target');
+
+                // Sembunyikan semua section
+                sections.forEach(s => s.classList.add('hidden'));
+                
+                // Tampilkan section yang dituju
+                document.getElementById(targetId).classList.remove('hidden');
+
+                // Atur status aktif pada navigasi
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+
+                // Muat ulang data sesuai section yang aktif
+                if (targetId === 'admin-section') {
+                    renderAdminLists();
+                } else if (targetId === 'jurnal-section') {
+                    renderJurnalForm();
+                } else if (targetId === 'rekap-jurnal-section') {
+                    renderRekapJurnal();
+                    renderJurnalFilters();
+                } else if (targetId === 'rekap-presensi-section') {
+                    renderRekapPresensi();
+                    renderPresensiFilters();
+                } else if (targetId === 'tugas-section') {
+                    renderTugasForm();
+                    renderTugasList();
+                }
+            });
+        });
+
+        // --- Administrator Section Logic ---
+        const renderAdminLists = () => {
+            // Render Guru
+            const guruList = loadData(DB_KEYS.GURU);
+            const listGuruEl = document.getElementById('list-guru');
+            listGuruEl.innerHTML = guruList.map(g => `<li class="text-gray-800">${g.nama}</li>`).join('');
+
+            // Render Kelas
+            const kelasList = loadData(DB_KEYS.KELAS);
+            const listKelasEl = document.getElementById('list-kelas');
+            listKelasEl.innerHTML = kelasList.map(k => `<li class="text-gray-800">${k.nama}</li>`).join('');
+
+            // Render Siswa
+            const siswaList = loadData(DB_KEYS.SISWA);
+            const listSiswaEl = document.getElementById('list-siswa');
+            listSiswaEl.innerHTML = siswaList.map(s => `<li class="text-gray-800">${s.nis} - ${s.nama} (${s.kelas})</li>`).join('');
+
+            // Render Mapel
+            const mapelList = loadData(DB_KEYS.MAPEL);
+            const listMapelEl = document.getElementById('list-mapel');
+            listMapelEl.innerHTML = mapelList.map(m => `<li class="text-gray-800">${m.nama}</li>`).join('');
+            
+            // Render Jadwal
+            const jadwalList = loadData(DB_KEYS.JADWAL);
+            const listJadwalEl = document.getElementById('list-jadwal');
+            listJadwalEl.innerHTML = jadwalList.map(j => `<li class="text-gray-800">${j.hari}, ${j.waktu} | ${j.kelas} | ${j.mapel} | Guru: ${j.guru}</li>`).join('');
+        };
+        
+        // Populate dropdowns for Admin forms
+        const populateAdminDropdowns = () => {
+            const kelasList = loadData(DB_KEYS.KELAS);
+            const mapelList = loadData(DB_KEYS.MAPEL);
+            const guruList = loadData(DB_KEYS.GURU);
+            
+            // Jadwal dropdowns
+            const jadwalKelasEl = document.getElementById('jadwal-kelas');
+            jadwalKelasEl.innerHTML = '<option value="">Pilih Kelas</option>' + kelasList.map(k => `<option value="${k.nama}">${k.nama}</option>`).join('');
+            
+            const jadwalMapelEl = document.getElementById('jadwal-mapel');
+            jadwalMapelEl.innerHTML = '<option value="">Pilih Mapel</option>' + mapelList.map(m => `<option value="${m.nama}">${m.nama}</option>`).join('');
+            
+            const jadwalGuruEl = document.getElementById('jadwal-guru');
+            jadwalGuruEl.innerHTML = '<option value="">Pilih Guru</option>' + guruList.map(g => `<option value="${g.nama}">${g.nama}</option>`).join('');
+
+            // Populate jam pelajaran dropdowns (Jam ke-1 sampai Jam ke-12)
+            const jadwalWaktuStartEl = document.getElementById('jadwal-waktu-start');
+            const jadwalWaktuEndEl = document.getElementById('jadwal-waktu-end');
+            
+            jadwalWaktuStartEl.innerHTML = '<option value="">Jam Mulai</option>';
+            jadwalWaktuEndEl.innerHTML = '<option value="">Jam Selesai</option>';
+
+            for (let i = 1; i <= 12; i++) {
+                const optionText = `Jam ke-${i}`;
+                jadwalWaktuStartEl.innerHTML += `<option value="${i}">${optionText}</option>`;
+                jadwalWaktuEndEl.innerHTML += `<option value="${i}">${optionText}</option>`;
+            }
+        };
+
+        // Form Submission Handlers
+        document.getElementById('form-add-guru').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nama = document.getElementById('guru-nama').value;
+            const guruList = loadData(DB_KEYS.GURU);
+            guruList.push({ id: Date.now(), nama });
+            saveData(DB_KEYS.GURU, guruList);
+            document.getElementById('guru-nama').value = '';
+            renderAdminLists();
+            populateAdminDropdowns();
+            showMessage('Guru berhasil ditambahkan!');
+        });
+        
+        // Handler untuk form gabungan Tambah Kelas & Siswa (IMPOR)
+        document.getElementById('form-add-kelas-siswa').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const siswaFile = document.getElementById('siswa-import-kelas').files[0];
+            
+            if (!siswaFile) {
+                showMessage('Silakan pilih file .txt untuk diimpor.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const content = event.target.result;
+                const lines = content.split('\n').map(line => line.trim()).filter(line => line !== '');
+                
+                const kelasList = loadData(DB_KEYS.KELAS);
+                const siswaList = loadData(DB_KEYS.SISWA);
+                
+                let addedStudents = 0;
+                let addedClasses = 0;
+                let duplicateStudents = 0;
+                let invalidLines = 0;
+
+                lines.forEach(line => {
+                    const parts = line.split(',').map(part => part.trim());
+                    // Format baru: NIS, Nama Siswa, Nama Kelas
+                    if (parts.length < 3) {
+                        invalidLines++;
+                        return;
+                    }
+                    
+                    const nis = parts[0];
+                    const namaSiswa = parts[1];
+                    const namaKelas = parts[2];
+
+                    // Periksa apakah siswa sudah ada (berdasarkan NIS)
+                    const isDuplicate = siswaList.some(s => s.nis === nis);
+                    if (isDuplicate) {
+                        duplicateStudents++;
+                        return;
+                    }
+
+                    // Periksa apakah kelas sudah ada, jika belum, tambahkan
+                    const kelasExists = kelasList.some(k => k.nama.toLowerCase() === namaKelas.toLowerCase());
+                    if (!kelasExists) {
+                        kelasList.push({ id: Date.now() + Math.random(), nama: namaKelas });
+                        addedClasses++;
+                    }
+
+                    // Tambahkan siswa
+                    siswaList.push({ id: Date.now() + Math.random(), nis, nama: namaSiswa, kelas: namaKelas });
+                    addedStudents++;
+                });
+
+                saveData(DB_KEYS.KELAS, kelasList);
+                saveData(DB_KEYS.SISWA, siswaList);
+
+                // Bersihkan form
+                e.target.reset();
+                renderAdminLists();
+                populateAdminDropdowns();
+                
+                const summaryMessage = `Impor berhasil!
+                <br> ${addedClasses} kelas baru ditambahkan.
+                <br> ${addedStudents} siswa baru ditambahkan.
+                <br> ${duplicateStudents} siswa duplikat dilewati.
+                <br> ${invalidLines} baris tidak valid dilewati.`;
+                showMessage(summaryMessage);
+            };
+            reader.readAsText(siswaFile);
+        });
+
+        // Handler untuk form manual Tambah Kelas & Siswa
+        document.getElementById('form-add-kelas-manual').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const kelasNama = document.getElementById('kelas-nama-manual').value.trim();
+            const siswaManual = document.getElementById('siswa-manual').value.trim();
+            
+            if (!kelasNama) {
+                showMessage('Nama kelas tidak boleh kosong.');
+                return;
+            }
+            if (!siswaManual) {
+                showMessage('Daftar siswa tidak boleh kosong.');
+                return;
+            }
+
+            const kelasList = loadData(DB_KEYS.KELAS);
+            if (kelasList.some(k => k.nama.toLowerCase() === kelasNama.toLowerCase())) {
+                showMessage(`Kelas "${kelasNama}" sudah ada.`);
+                return;
+            }
+            
+            // Tambahkan kelas baru
+            kelasList.push({ id: Date.now(), nama: kelasNama });
+            saveData(DB_KEYS.KELAS, kelasList);
+
+            const siswaList = loadData(DB_KEYS.SISWA);
+            let addedStudents = 0;
+            const namesFromManual = siswaManual.split('\n').map(name => name.trim()).filter(name => name !== '');
+            namesFromManual.forEach(nama => {
+                const isDuplicate = siswaList.some(s => s.nama.toLowerCase() === nama.toLowerCase() && s.kelas.toLowerCase() === kelasNama.toLowerCase());
+                if (!isDuplicate) {
+                    // Berikan NIS placeholder untuk manual input
+                    siswaList.push({ id: Date.now() + Math.random(), nis: 'N/A', nama, kelas: kelasNama });
+                    addedStudents++;
+                }
+            });
+
+            saveData(DB_KEYS.SISWA, siswaList);
+            renderAdminLists();
+            populateAdminDropdowns();
+            showMessage(`Kelas "${kelasNama}" dan ${addedStudents} siswa berhasil ditambahkan!`);
+
+            // Bersihkan form
+            e.target.reset();
+        });
+
+        document.getElementById('form-add-mapel').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nama = document.getElementById('mapel-nama').value;
+            const mapelList = loadData(DB_KEYS.MAPEL);
+            mapelList.push({ id: Date.now(), nama });
+            saveData(DB_KEYS.MAPEL, mapelList);
+            document.getElementById('mapel-nama').value = '';
+            renderAdminLists();
+            populateAdminDropdowns();
+            showMessage('Mata pelajaran berhasil ditambahkan!');
+        });
+
+        document.getElementById('form-add-jadwal').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const startHour = parseInt(document.getElementById('jadwal-waktu-start').value);
+            const endHour = parseInt(document.getElementById('jadwal-waktu-end').value);
+
+            if (startHour > endHour) {
+                showMessage('Jam mulai tidak boleh lebih dari jam selesai.');
+                return;
+            }
+
+            const waktu = `Jam ke-${startHour} - Jam ke-${endHour}`;
+            
+            const jadwal = {
+                id: Date.now(),
+                hari: document.getElementById('jadwal-hari').value,
+                kelas: document.getElementById('jadwal-kelas').value,
+                mapel: document.getElementById('jadwal-mapel').value,
+                waktu: waktu,
+                guru: document.getElementById('jadwal-guru').value,
+            };
+            const jadwalList = loadData(DB_KEYS.JADWAL);
+            jadwalList.push(jadwal);
+            saveData(DB_KEYS.JADWAL, jadwalList);
+            e.target.reset();
+            renderAdminLists();
+            showMessage('Jadwal berhasil ditambahkan!');
+        });
+
+        // --- Jurnal Mengajar Section Logic ---
+        const renderJurnalForm = () => {
+            const jadwalList = loadData(DB_KEYS.JADWAL);
+            const jadwalSelectEl = document.getElementById('jurnal-jadwal');
+            jadwalSelectEl.innerHTML = '<option value="">Pilih Jadwal</option>' + jadwalList.map(j => `<option value="${j.id}">${j.hari}, ${j.waktu} | ${j.kelas} | ${j.mapel} | ${j.guru}</option>`).join('');
+            document.getElementById('jurnal-tanggal').valueAsDate = new Date(); // Set tanggal hari ini
+            updateCurrentScheduleInfo();
+        };
+
+        const updateCurrentScheduleInfo = () => {
+            const jadwalSelectEl = document.getElementById('jurnal-jadwal');
+            const jadwalId = jadwalSelectEl.value;
+            const infoEl = document.getElementById('current-schedule-info');
+            
+            if (jadwalId) {
+                const jadwal = loadData(DB_KEYS.JADWAL).find(j => j.id == jadwalId);
+                const today = new Date();
+                const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                const dayName = days[today.getDay()];
+                infoEl.innerHTML = `${dayName}, ${jadwal.waktu} | Kelas: ${jadwal.kelas} | Mapel: ${jadwal.mapel}`;
+            } else {
+                infoEl.textContent = 'Pilih jadwal untuk melihat info.';
+            }
+        };
+
+        const renderPresensiCheckboxes = (kelas) => {
+            const siswaList = loadData(DB_KEYS.SISWA).filter(s => s.kelas === kelas);
+            const presensiListEl = document.getElementById('presensi-siswa-list');
+            presensiListEl.innerHTML = siswaList.map(s => `
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="presensi-${s.id}" class="h-4 w-4 text-indigo-600 rounded" data-siswa-id="${s.id}" checked>
+                    <label for="presensi-${s.id}">${s.nis} - ${s.nama}</label>
+                </div>
+            `).join('');
+        };
+
+        document.getElementById('jurnal-jadwal').addEventListener('change', (e) => {
+            const jadwalId = e.target.value;
+            updateCurrentScheduleInfo();
+            if (jadwalId) {
+                const jadwal = loadData(DB_KEYS.JADWAL).find(j => j.id == jadwalId);
+                if (jadwal) {
+                    renderPresensiCheckboxes(jadwal.kelas);
+                }
+            } else {
+                document.getElementById('presensi-siswa-list').innerHTML = '';
+            }
+        });
+
+        document.getElementById('form-jurnal-mengajar').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const jadwalId = document.getElementById('jurnal-jadwal').value;
+            const jadwal = loadData(DB_KEYS.JADWAL).find(j => j.id == jadwalId);
+            
+            const presensi = [];
+            document.querySelectorAll('#presensi-siswa-list input[type="checkbox"]').forEach(checkbox => {
+                const siswaId = checkbox.dataset.siswaId;
+                const siswa = loadData(DB_KEYS.SISWA).find(s => s.id == siswaId);
+                presensi.push({
+                    id: siswa.id,
+                    nis: siswa.nis,
+                    nama: siswa.nama,
+                    kelas: siswa.kelas,
+                    status: checkbox.checked ? 'Hadir' : 'Tidak Hadir'
+                });
+            });
+
+            const fotoInput = document.getElementById('jurnal-foto');
+            const fotoName = fotoInput.files.length > 0 ? fotoInput.files[0].name : 'Tidak ada foto';
+
+            const jurnalEntry = {
+                id: Date.now(),
+                tanggal: document.getElementById('jurnal-tanggal').value,
+                kelas: jadwal.kelas,
+                mapel: jadwal.mapel,
+                kegiatan: document.getElementById('jurnal-kegiatan').value,
+                catatan: document.getElementById('jurnal-catatan').value,
+                foto: fotoName,
+                presensi: presensi
+            };
+
+            const jurnalList = loadData(DB_KEYS.JURNAL);
+            jurnalList.push(jurnalEntry);
+            saveData(DB_KEYS.JURNAL, jurnalList);
+            e.target.reset();
+            renderJurnalForm();
+            showMessage('Jurnal mengajar berhasil disimpan!');
+        });
+
+        // --- Rekap Jurnal Mengajar Logic ---
+        const renderJurnalFilters = () => {
+            const kelasList = loadData(DB_KEYS.KELAS);
+            const kelasFilterEl = document.getElementById('filter-jurnal-kelas');
+            kelasFilterEl.innerHTML = '<option value="">Semua Kelas</option>' + kelasList.map(k => `<option value="${k.nama}">${k.nama}</option>`).join('');
+        };
+        
+        const renderRekapJurnal = () => {
+            let jurnalList = loadData(DB_KEYS.JURNAL);
+            const filterKelas = document.getElementById('filter-jurnal-kelas').value;
+            const filterTanggal = document.getElementById('filter-jurnal-tanggal').value;
+
+            // Terapkan filter
+            if (filterKelas) {
+                jurnalList = jurnalList.filter(j => j.kelas === filterKelas);
+            }
+            if (filterTanggal) {
+                jurnalList = jurnalList.filter(j => j.tanggal === filterTanggal);
+            }
+
+            const rekapJurnalListEl = document.getElementById('rekap-jurnal-list');
+            if (jurnalList.length === 0) {
+                rekapJurnalListEl.innerHTML = '<p class="text-center text-gray-500">Tidak ada data jurnal.</p>';
+                return;
+            }
+
+            rekapJurnalListEl.innerHTML = jurnalList.map(j => {
+                const siswaTidakHadir = j.presensi.filter(p => p.status !== 'Hadir');
+                return `
+                    <div class="card border-l-4 border-indigo-500">
+                        <p class="text-xs text-gray-500">${j.tanggal} | Kelas ${j.kelas}</p>
+                        <h3 class="text-lg font-bold mt-1">${j.mapel}</h3>
+                        <p class="mt-2 text-gray-700"><strong>Kegiatan:</strong> ${j.kegiatan}</p>
+                        <div class="mt-2 text-gray-700">
+                            <strong>Siswa Tidak Hadir:</strong>
+                            <ul class="list-disc list-inside">
+                                ${siswaTidakHadir.length > 0 ? siswaTidakHadir.map(s => `<li>${s.nama} (${s.status})</li>`).join('') : '<li>Semua siswa hadir</li>'}
+                            </ul>
+                        </div>
+                        <p class="mt-2 text-gray-700"><strong>Catatan:</strong> ${j.catatan || 'Tidak ada catatan.'}</p>
+                        <p class="mt-2 text-gray-700"><strong>Foto:</strong> ${j.foto}</p>
+                    </div>
+                `;
+            }).join('');
+        };
+        
+        document.getElementById('filter-jurnal-kelas').addEventListener('change', renderRekapJurnal);
+        document.getElementById('filter-jurnal-tanggal').addEventListener('change', renderRekapJurnal);
+        
+        // --- Rekap Presensi Logic ---
+        const renderPresensiFilters = () => {
+            const kelasList = loadData(DB_KEYS.KELAS);
+            const kelasFilterEl = document.getElementById('filter-presensi-kelas');
+            kelasFilterEl.innerHTML = '<option value="">Semua Kelas</option>' + kelasList.map(k => `<option value="${k.nama}">${k.nama}</option>`).join('');
+        };
+
+        const renderRekapPresensi = () => {
+            const jurnalList = loadData(DB_KEYS.JURNAL);
+            const siswaList = loadData(DB_KEYS.SISWA);
+            const presensiRekap = {}; // { siswaId: { nis, nama, kelas, tidakhadir: N } }
+            
+            // Inisialisasi rekap
+            siswaList.forEach(s => {
+                presensiRekap[s.nis] = { nis: s.nis, nama: s.nama, kelas: s.kelas, tidakhadir: 0 };
+            });
+
+            // Hitung rekap dari jurnal
+            jurnalList.forEach(j => {
+                j.presensi.forEach(p => {
+                    if (presensiRekap[p.nis]) {
+                        if (p.status !== 'Hadir') {
+                            presensiRekap[p.nis].tidakhadir++;
+                        }
+                    }
+                });
+            });
+
+            // Terapkan filter
+            const filterNama = document.getElementById('filter-presensi-nama').value.toLowerCase();
+            const filterKelas = document.getElementById('filter-presensi-kelas').value;
+            const filterTanggal = document.getElementById('filter-presensi-tanggal').value; // Belum diimplementasikan
+
+            const filteredPresensi = Object.values(presensiRekap).filter(p => {
+                let matches = true;
+                if (filterNama && !p.nama.toLowerCase().includes(filterNama)) matches = false;
+                if (filterKelas && p.kelas !== filterKelas) matches = false;
+                return matches;
+            });
+
+            const tableBodyEl = document.getElementById('presensi-table-body');
+            if (filteredPresensi.length === 0) {
+                tableBodyEl.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Tidak ada data presensi.</td></tr>';
+                return;
+            }
+
+            tableBodyEl.innerHTML = filteredPresensi.map(p => `
+                <tr class="text-center hover:bg-gray-50">
+                    <td class="py-2 px-4 border-b">${p.nis}</td>
+                    <td class="py-2 px-4 border-b">${p.nama}</td>
+                    <td class="py-2 px-4 border-b">${p.kelas}</td>
+                    <td class="py-2 px-4 border-b ${p.tidakhadir > 2 ? 'alpha-count-3' : ''}">${p.tidakhadir}</td>
+                </tr>
+            `).join('');
+        };
+
+        document.getElementById('filter-presensi-nama').addEventListener('input', renderRekapPresensi);
+        document.getElementById('filter-presensi-kelas').addEventListener('change', renderRekapPresensi);
+        document.getElementById('filter-presensi-tanggal').addEventListener('change', renderRekapPresensi);
+
+        // --- Tugas Section Logic ---
+        const renderTugasForm = () => {
+            const kelasList = loadData(DB_KEYS.KELAS);
+            const tugasKelasEl = document.getElementById('tugas-kelas');
+            tugasKelasEl.innerHTML = '<option value="">Pilih Kelas</option>' + kelasList.map(k => `<option value="${k.nama}">${k.nama}</option>`).join('');
+        };
+        
+        document.getElementById('tugas-kelas').addEventListener('change', (e) => {
+            const kelas = e.target.value;
+            const siswaList = loadData(DB_KEYS.SISWA).filter(s => s.kelas === kelas);
+            const nilaiListEl = document.getElementById('tugas-nilai-list');
+            nilaiListEl.innerHTML = siswaList.map(s => `
+                <div class="flex flex-col gap-1">
+                    <label for="nilai-${s.id}">${s.nis} - ${s.nama}</label>
+                    <input type="number" id="nilai-${s.id}" class="w-full p-2 border rounded-md" min="0" max="100" data-siswa-id="${s.id}">
+                </div>
+            `).join('');
+        });
+
+        document.getElementById('form-tugas').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const judul = document.getElementById('tugas-judul').value;
+            const kelas = document.getElementById('tugas-kelas').value;
+            const deskripsi = document.getElementById('tugas-deskripsi').value;
+            
+            const nilaiSiswa = [];
+            document.querySelectorAll('#tugas-nilai-list input[type="number"]').forEach(input => {
+                const siswaId = input.dataset.siswaId;
+                const siswa = loadData(DB_KEYS.SISWA).find(s => s.id == siswaId);
+                nilaiSiswa.push({
+                    id: siswa.id,
+                    nis: siswa.nis,
+                    nama: siswa.nama,
+                    nilai: input.value || 0
+                });
+            });
+            
+            const tugasEntry = {
+                id: Date.now(),
+                tanggal: new Date().toISOString().slice(0, 10),
+                judul,
+                kelas,
+                deskripsi,
+                nilai: nilaiSiswa
+            };
+
+            const tugasList = loadData(DB_KEYS.TUGAS);
+            tugasList.push(tugasEntry);
+            saveData(DB_KEYS.TUGAS, tugasList);
+            e.target.reset();
+            renderTugasForm();
+            renderTugasList();
+            showMessage('Tugas berhasil disimpan!');
+        });
+        
+        const renderTugasList = () => {
+            const tugasList = loadData(DB_KEYS.TUGAS);
+            const listTugasEl = document.getElementById('list-tugas');
+            if (tugasList.length === 0) {
+                listTugasEl.innerHTML = '<p class="text-center text-gray-500">Belum ada tugas.</p>';
+                return;
+            }
+
+            listTugasEl.innerHTML = tugasList.map(t => {
+                const nilaiHtml = t.nilai.map(n => `<li>${n.nama} (${n.nis}): ${n.nilai}</li>`).join('');
+                return `
+                    <div class="card border-l-4 border-purple-500">
+                        <p class="text-xs text-gray-500">${t.tanggal}</p>
+                        <h3 class="text-lg font-bold mt-1">${t.judul} (${t.kelas})</h3>
+                        <p class="mt-2 text-gray-700">${t.deskripsi}</p>
+                        <div class="mt-2">
+                            <h4 class="font-semibold">Nilai:</h4>
+                            <ul class="list-disc list-inside">
+                                ${nilaiHtml || '<li>Belum ada nilai</li>'}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+        
+        // --- Download Section Logic ---
+        const exportToCsv = (filename, data) => {
+            let csvContent = "";
+            const headers = Object.keys(data[0]);
+            csvContent += headers.join(",") + "\n";
+            data.forEach(item => {
+                const row = headers.map(header => {
+                    const value = item[header];
+                    // Jika nilai adalah array atau objek, ubah ke string JSON
+                    if (typeof value === 'object' && value !== null) {
+                        return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+                    }
+                    return value;
+                }).join(",");
+                csvContent += row + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        document.getElementById('download-jurnal-btn').addEventListener('click', () => {
+            const jurnalData = loadData(DB_KEYS.JURNAL);
+            if (jurnalData.length === 0) {
+                showMessage('Tidak ada data jurnal untuk diunduh.');
+                return;
+            }
+            exportToCsv('rekap_jurnal_mengajar.csv', jurnalData);
+        });
+
+        document.getElementById('download-presensi-btn').addEventListener('click', () => {
+            const jurnalData = loadData(DB_KEYS.JURNAL);
+            if (jurnalData.length === 0) {
+                showMessage('Tidak ada data presensi untuk diunduh.');
+                return;
+            }
+            
+            const rekapPresensi = {};
+            jurnalData.forEach(j => {
+                j.presensi.forEach(p => {
+                    if (!rekapPresensi[p.nama]) {
+                        rekapPresensi[p.nama] = { 'NIS Siswa': p.nis, 'Nama Siswa': p.nama, 'Kelas': p.kelas, 'Total Absen': 0 };
+                    }
+                    if (p.status !== 'Hadir') {
+                        rekapPresensi[p.nama]['Total Absen']++;
+                    }
+                });
+            });
+            
+            exportToCsv('rekap_presensi.csv', Object.values(rekapPresensi));
+        });
+
+        document.getElementById('download-nilai-btn').addEventListener('click', () => {
+            const tugasData = loadData(DB_KEYS.TUGAS);
+            if (tugasData.length === 0) {
+                showMessage('Tidak ada data tugas untuk diunduh.');
+                return;
+            }
+
+            const flattenedData = [];
+            tugasData.forEach(tugas => {
+                tugas.nilai.forEach(nilai => {
+                    flattenedData.push({
+                        'Judul Tugas': tugas.judul,
+                        'Kelas': tugas.kelas,
+                        'NIS Siswa': nilai.nis,
+                        'Nama Siswa': nilai.nama,
+                        'Nilai': nilai.nilai
+                    });
+                });
+            });
+
+            if (flattenedData.length === 0) {
+                showMessage('Tidak ada data nilai untuk diunduh.');
+                return;
+            }
+
+            exportToCsv('rekap_nilai.csv', flattenedData);
+        });
+
+        // Inisialisasi Tampilan
+        document.addEventListener('DOMContentLoaded', () => {
+            populateAdminDropdowns();
+            renderJurnalForm();
+        });
+
+    </script>
+
+</body>
+</html>
